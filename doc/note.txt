@@ -1,0 +1,95 @@
+Calculate 2D mobility. Using Ji Wei's 2D mobility formula
+
+
+2 directions * 2 carriers
+totally 4 mobility values.
+Dependency: python3, numpy, scipy, pymatgen
+
+0. create main calculation directory, calculation
+1. create relax directory, calculation/relax
+2. cd relax
+3. prepare structure file, and relax this structure using your setting (soc? hybrid?)
+4. cp CONTCAR POSCAR
+5. cd ..
+6. create a new directory, calculation/strain
+7. cp -ra relax strain/0
+8. calculation/relax and calculation/strain/0 are the same, now
+9. cd strain
+10. strain.sh
+11. now, we have calculation/strain/${i}_${j};
+    here i=0,1, represent the armchair(x) and zig-zag directions, respectively
+    j=0.990,0.995,1.000,1.005,1.010, represent the different strains
+12. relax this strained structures with ISIF=2. 
+(C_2D accomplished.)
+13. cp CONCAR POSCAR; **do this in all the 10 directories.**
+
+!!!!!!!!! Symmetry should be turned off in the below calculations!!!!!!! ISYM=-1
+!!!!!!!!! LVHAR must be turned on !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+14. back to the main calculation directory
+15. cp -ra strain c2d
+16. cp -ra strain deformation_potential_constant
+17. cd deformation_potential_constant
+18. calculate band structure for all 10 structures USE ISYM=-1, LVHAR = T, and HSE_KPOINTS.
+HSE_KPOINTS: scf kpoints with weights > 0 and band kpoints with weights=0.
+ofcourse we can use HSE_KPOINTS in pbe calculations.
+19. cd 0_1.000; hse_band_edge; cd ..;       # create kpt_hse_cbm and kpt_hse_vbm
+20. cp -ra 0_1.000 ../emass/cbm;
+21. cp -ra 0_1.000 ../emass/vbm;
+22. cd ../emass/cbm; cp kpt_hse_cbm KPOINTS;
+23. cd ../vbm; cp kpt_hse_vbm KPOINTS;
+24. band calculation in emass/cbm and emass/vbm. That is, PBE scf -> WAVECAR; HSE scf with band kpts(weight 0.0), ISTART = 1, ICHARG = 2;
+25. back to the main directory
+26. calculate_mobility.py;
+
+# formula
+#
+#
+#
+#
+#
+#
+#directory architechture
+#       
+#               |         |-- 0
+#               |         |-- 0_0.990
+#               |         |-- 0_0.995
+#               |         |-- 0_1.000
+#               |         |-- 0_1.005
+#               |         |-- 0_1.010
+#               |-- c2d --|-- 1_0.990
+#               |         |-- 1_0.995
+#               |         |-- 1_1.000
+#               |         |-- 1_1.005
+#               |         `-- 1_1.010
+#               |
+#               |
+#               |
+#               |                                    |-- 0
+#               |                                    |-- 0_0.990
+#               |                                    |-- 0_0.995
+#               |                                    |-- 0_1.000
+#               |                                    |-- 0_1.005
+#               |-- deformation_potential_constant --|-- 0_1.010 
+#               |                                    |-- 1_0.990
+#               |                                    |-- 1_0.995
+#               |                                    |-- 1_1.000
+#               |                                    |-- 1_1.005
+#               |                                    `-- 1_1.010
+#               |
+#               |
+#               |
+#               |           |-- cbm    
+#               |           |          
+#               |           |          
+# calculation --|-- emass --|          
+#               |           |      
+#               |           |      
+#               |           `-- vbm    
+#               |                  
+#               |
+#               |
+#               |
+#               |-- relax
+#               |-- scf
+#               `-- strain
